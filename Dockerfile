@@ -1,8 +1,8 @@
 #@# vim: set filetype=dockerfile:
 FROM alpine:3.16.1
-LABEL maintainer "Takahiro INOUE <github.com/hinata>"
+LABEL maintainer="Yann DE THE <github.com/ydethe>"
 
-ENV NGINX_VERSION 1.23.1
+ENV NGINX_VERSION=1.23.1
 
 ##
 # dependent packages for docker build
@@ -37,6 +37,7 @@ RUN curl -LSs http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -O        
 WORKDIR /
 
 COPY ./nginx.conf /usr/local/nginx/conf/nginx.conf
+COPY ./conf.d /usr/local/nginx/conf
 
 EXPOSE 3128
 
