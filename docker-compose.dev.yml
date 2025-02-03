@@ -1,8 +1,9 @@
 services:
   backend:
-    build: .
+    image: wenbushi/ngx_http_proxy_connect
     ports:
     - "3128:3128"
     volumes:
-    - ./conf.d:/conf/conf.d:ro
-    # sudo htpasswd -c conf.d/htpasswd username
+    - ./conf.d:/etc/nginx/conf.d:ro
+    - ./nginx.conf:/etc/nginx/nginx.conf
+    # htpasswd -c conf.d/htpasswd username
