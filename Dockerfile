@@ -2,8 +2,6 @@
 FROM alpine:3.16.1
 LABEL maintainer="Yann DE THE <github.com/ydethe>"
 
-ENV NGINX_VERSION=1.23.1
-
 ##
 # dependent packages for docker build
 ##
@@ -15,20 +13,20 @@ RUN apk update && \
       alpine-sdk  \
       openssl-dev \
       pcre-dev    \
-      zlib-dev
+      zlib-dev    \
+      perl
 
-RUN curl -LSs http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -O                                             && \
-    tar xf nginx-${NGINX_VERSION}.tar.gz                                                                             && \
-    cd     nginx-${NGINX_VERSION}                                                                                    && \
-    git clone https://github.com/chobits/ngx_http_proxy_connect_module                                               && \
-    patch -p1 < ./ngx_http_proxy_connect_module/patch/proxy_connect_rewrite_102101.patch                             && \
-    ./configure                                                                                                         \
-      --add-module=./ngx_http_proxy_connect_module                                                                      \
-      --sbin-path=/usr/sbin/nginx                                                                                       \
-      --with-cc-opt='-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fPIC' && \
-    make -j $(nproc)                                                                                                 && \
-    make install                                                                                                     && \
-    rm -rf /tmp/*
+# https://github.com/chobits/ngx_http_proxy_connect_module?tab=readme-ov-file#build-openresty
+RUN curl -LSs  https://openresty.org/download/openresty-1.19.3.1.tar.gz -O                                       && \
+    tar xf openresty-1.19.3.1.tar.gz                                                                             && \
+    cd openresty-1.19.3.1                                                                                        && \
+    git clone https://github.com/chobits/ngx_http_proxy_connect_module                                           && \
+    ./configure --add-module=./ngx_http_proxy_connect_module                                                     && \
+    patch -d build/nginx-1.19.3/ -p 1 < ./ngx_http_proxy_connect_module/patch/proxy_connect_rewrite_101504.patch && \
+    make -j $(nproc)                                                                                             && \
+    make install                                                                                                 && \
+    rm -rf /tmp/*                                                                                                && \
+    mkdir /logs
 
 ##
 # application deployment
@@ -36,11 +34,12 @@ RUN curl -LSs http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -O        
 
 WORKDIR /
 
-COPY ./nginx.conf /usr/local/nginx/conf/nginx.conf
-COPY ./conf.d /usr/local/nginx/conf
+COPY ./nginx.conf /conf/nginx.conf
+COPY ./conf.d/nginx.conf /conf/conf.d/nginx.conf
+COPY ./proxy_auth.lua /proxy_auth.lua
 
 EXPOSE 3128
 
 STOPSIGNAL SIGTERM
 
-CMD [ "nginx", "-g", "daemon off;" ]
+CMD [ "/usr/local/openresty/nginx/sbin/nginx", "-g", "daemon off;", "-p", "/", "-c", "conf/nginx.conf" ]

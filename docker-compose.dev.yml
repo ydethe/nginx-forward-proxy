@@ -1,0 +1,8 @@
+services:
+  backend:
+    build: .
+    ports:
+    - "3128:3128"
+    volumes:
+    - ./conf.d:/conf/conf.d:ro
+    # sudo htpasswd -c conf.d/htpasswd username
