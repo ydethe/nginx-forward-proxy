@@ -67,3 +67,5 @@ RUN set -x \
     && if [ -f "/etc/apk/keys/nginx_signing.rsa.pub" ]; then rm -f /etc/apk/keys/nginx_signing.rsa.pub; fi \
 # Bring in curl and ca-certificates to make registering on DNS SD easier
     && apk add --no-cache curl ca-certificates
+
+COPY nginx.conf /etc/nginx/nginx.conf
